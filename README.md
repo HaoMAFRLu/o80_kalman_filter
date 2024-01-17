@@ -51,3 +51,6 @@ The impact detection logic is as follows: Given the state $s_k$ of the ball, and
 If the time required $\Delta t_{\text{req}}$ for a impact is greater than a single time step $\Delta t$, then no impact occurs in that simulation step; otherwise, we introduce the impact model and calculate the states before and after the impact separately. 
 
 It is not difficult to see that we assume the $x$ and $y$ coordinates of the ball remain constant during the impact detection process, therefore this method is only effective for very small time steps.
+
+## Impact model
+Currently, for both table impacts and ground impacts, linear models are used to change the ball's velocity before and after the impact, while the position remains unchanged.
