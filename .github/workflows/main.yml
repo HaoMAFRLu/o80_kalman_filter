@@ -1,0 +1,11 @@
+name: Compile LaTeX Document
+on: [push, pull_request]
+jobs:
+  build_pdf:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Compile LaTeX Document
+        uses: xu-cheng/latex-action@v2
+        with:
+          root_file: README.md
