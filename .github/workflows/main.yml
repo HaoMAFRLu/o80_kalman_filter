@@ -12,8 +12,11 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    - name: Install Pandoc
-      run: sudo apt-get install pandoc
+    - name: Install Pandoc and pdflatex
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y pandoc
+        sudo apt-get install -y texlive-latex-base
 
     - name: Convert Markdown to PDF
       run: pandoc -s README.md -o README.pdf
@@ -23,3 +26,4 @@ jobs:
       with:
         name: README.pdf
         path: README.pdf
+      
