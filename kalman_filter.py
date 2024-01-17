@@ -159,15 +159,48 @@ class KalmanFilter:
     def kalman_filter(self, states_prediction: State9d, 
                       states_measurement: State9d,
                       dt: float, kd: float, km: float) -> State9d:
+        """This function is used to apply Kalman filter to estimate
+        the states of the object at the next step
+
+        Parameters
+        ----------
+        states_prediction:
+          states of the object obtained from the model
+        states_measurement:
+          states of the object obtained from the sensors
+        dt:
+          one single time step
+        kd:
+          coefficient for drag effect
+        km:
+          coefficient for magnus effect
         
-        A = self.get_Jacobian(states_measurement, dt, kd, km)
-        Pp = self.get_error_covariance(A, self.P, self.Q)
-        v = self.get_output_difference(states_measurement, states_prediction, self.H)
-        S = self.get_S(self.H, Pp, self.R) 
-        K = self.get_kalman_gain(Pp, self.H, S)
-        states_next = self.get_next_states(states_prediction, K, v)
-        self.P = self.update_error_covariance(self.I, K, self.H, Pp)
-        return states_next
+        Variables
+        ---------
+        A:
+          Jacobian matrix obtained by linearizing the 
+          model using measured states
+        P:
+          predicted error covariance matrix
+        S:
+          intermediate matrix used to calculate kalman gain
+        K:
+          kalman gain
+        states:
+          estimated states at the next time step
+        
+        Returns
+        -------
+        next states
+        """
+        A      = self.get_Jacobian(states_measurement, dt, kd, km)
+        P      = self.get_error_covariance(A, self.P, self.Q)
+        v      = self.get_output_difference(states_measurement, states_prediction, self.H)
+        S      = self.get_S(self.H, P, self.R) 
+        K      = self.get_kalman_gain(P, self.H, S)
+        states = self.get_next_states(states_prediction, K, v)
+        self.P = self.update_error_covariance(self.I, K, self.H, P)
+        return states
     
 
     def state_estimation(self, free_falling: FreeFalling, 

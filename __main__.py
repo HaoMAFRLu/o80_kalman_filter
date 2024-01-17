@@ -28,6 +28,7 @@ def run():
     
     states_measurement = np.array(ball.ball["states_measurement"])
     states_kf = np.array(ball.ball["states_kf"])
+    
     # fcs.plot_trajectories(states_measurement[:, 0:3], states_kf[:, 0:3], table=table)
     fcs.plot_trajectories(trajectory, trajectory_prediction, table=table)
 
