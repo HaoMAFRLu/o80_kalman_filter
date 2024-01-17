@@ -9,9 +9,9 @@ This is a Kalman Filter written for Pamy's vision system. Its primary functions 
 
 ## The motion model of a ball
 We adopt the following continuous motion model for the ball:
-\[
+$
 \dot{v} = - \frac{1}{2m} C_{\text{d}} \rho A \left| v \right| v + \frac{1}{2m} C_{\text{m}} \rho A r \omega \times v + g,
-\]
+$
 where
 * $m$ denotes the mass of a ball, in kg,
 * $r$ denote the radius of a ball, in m,
@@ -24,18 +24,18 @@ where
 * $|\cdot|$ denotes the $\ell_2$-norm.
 
 and we calculate the coefficients $k_{\text{d}}$ and $k_{\text{m}}$ as follows:
-$$
+$
 k_{\text{d}} = \frac{1}{2m} C_{\text{d}} \rho A,~k_{\text{m}} = \frac{1}{2m} C_{\text{m}} \rho A r.
-$$
+$
 
 In calculation, we adopt the following discrete model,
-$$
+$
 s_{k+1} = s_k + \Delta t 
 \begin{pmatrix}
 v_k\\
 -k_{\text{d}} \left|v_k\right| v_k + k_{\text{m}} \omega_k \times v_k + g
 \end{pmatrix},~k \in \mathbb{Z}_{+},
-$$
+$
 where 
 * the states $s_k \in \mathbb{R}^6$ includes the position $r \in \mathbb{R}^3$ and velocity $v$ of a ball, 
 * $k$ denotes the number of step, 
