@@ -1,18 +1,25 @@
-name: Lint Markdown
+name: Convert Markdown to PDF
 
-on:
+on: 
   push:
     paths:
-      - 'README.md'
-  pull_request:
-    paths:
-      - 'README.md'
+      - '**.md'
 
 jobs:
-  markdown-lint:
+  convert:
     runs-on: ubuntu-latest
+
     steps:
     - uses: actions/checkout@v2
-    - uses: avto-dev/markdown-lint@v1
+
+    - name: Install Pandoc
+      run: sudo apt-get install pandoc
+
+    - name: Convert Markdown to PDF
+      run: pandoc -s README.md -o README.pdf
+
+    - name: Upload PDF
+      uses: actions/upload-artifact@v2
       with:
-        config: '.markdownlint.json'
+        name: README.pdf
+        path: README.pdf
