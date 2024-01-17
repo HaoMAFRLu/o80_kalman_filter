@@ -24,9 +24,9 @@ where
 * $|\cdot|$ denotes the $\ell_2$-norm.
 
 and we calculate the coefficients $k_{\text{d}}$ and $k_{\text{m}}$ as follows:
-$
+$$
 k_{\text{d}} = \frac{1}{2m} C_{\text{d}} \rho A,~k_{\text{m}} = \frac{1}{2m} C_{\text{m}} \rho A r.
-$
+$$
 
 In calculation, we adopt the following discrete model,
 \[
