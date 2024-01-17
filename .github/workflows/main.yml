@@ -12,17 +12,19 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    - name: Install Pandoc and pdflatex
+    - name: Install Pandoc and LaTeX packages
       run: |
         sudo apt-get update
         sudo apt-get install -y pandoc
-        sudo apt-get install -y texlive-latex-base
+        sudo apt-get install -y texlive-xetex
+        sudo apt-get install -y texlive-latex-extra  # Install additional LaTeX packages
 
     - name: Convert Markdown to PDF
-      run: pandoc -s README.md -o README.pdf
+      run: pandoc -s README.md --pdf-engine=xelatex -o README.pdf
 
     - name: Upload PDF
       uses: actions/upload-artifact@v2
       with:
         name: README.pdf
         path: README.pdf
+      
