@@ -57,8 +57,7 @@ class Ball:
             "states_measurement": None,
             "states_kf":          None,
             "states":             None,
-            "states_impact":      None,
-            "impact_type":        None
+            "impact_info":        None
         }
 
         self.kalman_filter = KalmanFilter(config["kalman_filter"])
@@ -116,8 +115,7 @@ class Ball:
             "states_measurement": [states],
             "states_kf":          [states],
             "states":             states,
-            "states_impact":      [],
-            "impact_type":        []
+            "impact_info":        []
         }
 
     def continuity_judgment(self, t: float, position: State3d, velocity: State3d, omega: State3d) -> bool:
@@ -155,9 +153,9 @@ class Ball:
             self.ball_initialization(t, position, velocity, omega)
             return 0
         elif t != -1 and self.t_ini is not None:  # measurement exists and previous ball exists
-            if np.linalg.norm(position - self.ball["states_kf"][-1][0:3]) > 0.5:  # it is too far away from the previous position and is judged as a new ball
+            if np.linalg.norm(position - self.ball["states_kf"][-1][0:3]) > 1.0:  # it is too far away from the previous position and is judged as a new ball
                 self.reset()
-                self.ball_initialization(t, position, velocity)
+                self.ball_initialization(t, position, velocity, omega)
                 return 0
             else:
                 self.empty_counter = 0
@@ -166,10 +164,9 @@ class Ball:
     def extend_array(self, array, element):
         return np.concatenate((array, element.reshape(1, -1)), axis=0)
     
-    def ball_update(self, t: float, states_kf: State9d, states_measurement: State9d, 
-                    states_before_impact: State9d, 
-                    states_after_impact: State9d, 
-                    impact_type: str) -> None:
+    def ball_update(self, t: float, states_kf: State9d, 
+                    states_measurement: State9d, 
+                    impact_info: tuple) -> None:
         """ This function is used to update the states of the ball
 
         Parameters
@@ -187,9 +184,8 @@ class Ball:
         self.ball["states"] = states_kf
         self.ball["states_measurement"].append(states_measurement)
         self.ball["states_kf"].append(states_kf)
-        if impact_type is not None:
-            self.ball["impact"].append(impact_type)
-            self.ball["states_impact"].append((states_before_impact, states_after_impact))
+        if impact_info[0] is not None:
+            self.ball["impact_info"].append(impact_info)
     
     def input_data(self, t: float, position_measurement: State3d, velocity_measurement: State3d, omega_measurement: State3d) -> None:
         """ Perform a reading of the state of the ball from the visual system, 
@@ -215,16 +211,33 @@ class Ball:
         if _ball_continuity == 1:
             dt = t - self.ball["t_stamp"][-1]
             states_measurement = fcs.merge_arrays(position_measurement, velocity_measurement, omega_measurement)
-            states_kf, states_before_impact, states_after_impact, impact_type = self.kalman_filter.state_estimation(self.free_falling, self.ball["states"], states_measurement, dt)
-            self.ball_update(t, states_kf, states_measurement, states_before_impact, states_after_impact, impact_type)
+            states_kf, impact_info = self.kalman_filter.state_estimation(self.free_falling, self.ball["states"], states_measurement, dt)
+            self.ball_update(t, states_kf, states_measurement, impact_info)
     
-    @staticmethod
-    def _prediction(free_falling: FreeFalling, t_ini: float, states: State9d, prediction_horizon: float) -> Array:
-        pass
+    def prediction(self, states: State9d, prediction_horizon: float, dt: float) -> Array:
+        """This function is used to predict the rest
+        trajectory of the ball in the prediction horizon
+        based on the given initial states
 
-    def prediction(self, prediction_horizon: float) -> Array:
-        pass
+        Parameters
+        ----------
+        states:
+          the given initial states
+        prediction_horizon:
+          the prediction horizon, in s
+        dt:
+          average time steps, in s
 
+        Returns
+        -------
+        the predicted trajectory
+        """
+        num_steps = int(prediction_horizon/dt)
+        trajectory = np.zeros((num_steps, 3))
+        for i in range(num_steps):
+            states, _ = self.free_falling.falling(states, dt)
+            trajectory[i, :] = states[0:3]
+        return trajectory
 
 
         

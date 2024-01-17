@@ -84,7 +84,7 @@ class KalmanFilter:
         self.H = np.hstack((np.identity(3), np.zeros((3, 6))))
         self.I = np.identity(9)
 
-    def JacobianMatrix(self, states: State9d, dt: float, kd: float, km: float) -> Matrix:
+    def get_Jacobian(self, states: State9d, dt: float, kd: float, km: float) -> Matrix:
         """This function is used to generate the jacobian matrix of free falling motion
 
         Parameters
@@ -114,12 +114,12 @@ class KalmanFilter:
         omegaz = omega[2]
 
         F_1_drag = - dt*kd*np.array([[(v_norm + vx**2 / v_norm), (vy * vx / v_norm), (vz * vx / v_norm)],
-                                             [(vy * vx / v_norm), (v_norm + vy**2 / v_norm), (vz * vy / v_norm)],
-                                             [(vz * vx / v_norm), (vy * vz / v_norm), (v_norm + vz**2 / v_norm)]])
+                                     [(vy * vx / v_norm), (v_norm + vy**2 / v_norm), (vz * vy / v_norm)],
+                                     [(vz * vx / v_norm), (vy * vz / v_norm), (v_norm + vz**2 / v_norm)]])
                         
         F_1_magnus = dt*km*np.array([[0.0, - omegaz, omegay],
-                                      [omegaz, 0.0, - omegax],
-                                      [- omegay, omegax, 0.0]])
+                                     [omegaz, 0.0, - omegax],
+                                     [- omegay, omegax, 0.0]])
 
         F_1 = I + F_1_drag + F_1_magnus
 
@@ -131,22 +131,48 @@ class KalmanFilter:
                         [Z,  F_1, F_2],
                         [Z,    Z,   I]])
         return Jac
-
-    def kalman_filter(self, states: State9d, dt: float, kd: float, km: float) -> State9d:
+    
+    @staticmethod
+    def get_error_covariance(A: Matrix, P: Matrix, Q: Matrix) -> Matrix:
+        return A@P@A.T + Q
+    
+    @staticmethod
+    def get_output_difference(states_measurement: State9d, states_prediction: State9d, H: Matrix) -> State3d:
+        return H@states_measurement - H@states_prediction
         
-        A = self.JacobianMatrix(states, dt, kd, km)
-        Pp = A@self.P@A.T + self.Q
-        K = Pp@self.H.T@np.linalg.inv(self.H@Pp@self.H.T + self.R)
-        
-        states_next = states + K@(states[0:3] - self.H@states)
-        self.P = (self.I - (K@self.H))@Pp
+    @staticmethod
+    def get_S(H: Matrix, P: Matrix, R: Matrix) -> Matrix:
+        return np.linalg.inv(H@P@H.T + R)
 
+    @staticmethod
+    def get_kalman_gain(P: Matrix, H: Matrix, S: Matrix) -> Matrix:
+        return P@H.T@S
+
+    @staticmethod
+    def get_next_states(states_prediction: State9d, K: Matrix, v: State3d) -> State9d:
+        return states_prediction + K@v
+    
+    @staticmethod
+    def update_error_covariance(I: Matrix, K: Matrix, H: Matrix, P: Matrix) -> Matrix:
+        return (I - (K@H))@P
+    
+    def kalman_filter(self, states_prediction: State9d, 
+                      states_measurement: State9d,
+                      dt: float, kd: float, km: float) -> State9d:
+        
+        A = self.get_Jacobian(states_measurement, dt, kd, km)
+        Pp = self.get_error_covariance(A, self.P, self.Q)
+        v = self.get_output_difference(states_measurement, states_prediction, self.H)
+        S = self.get_S(self.H, Pp, self.R) 
+        K = self.get_kalman_gain(Pp, self.H, S)
+        states_next = self.get_next_states(states_prediction, K, v)
+        self.P = self.update_error_covariance(self.I, K, self.H, Pp)
         return states_next
     
 
     def state_estimation(self, free_falling: FreeFalling, 
                          states_last_step: State9d, 
-                         states_measurement: State9d, dt: float) -> (State9d, State9d, State9d, str):
+                         states_measurement: State9d, dt: float) -> (State9d, tuple):
         """This function is used to estimate the state at the
         next step using Kalman filter, which includes impact 
         detection
@@ -176,10 +202,10 @@ class KalmanFilter:
         assert states_last_step.shape == (9,)
         assert states_measurement.shape == (9,)
 
-        states_prediction, states_before_impact, states_after_impact, impact_type = free_falling.falling(states_last_step, dt)
-        states_kf = self.kalman_filter(states_prediction, dt, free_falling.kd, free_falling.km)
-
-        return states_kf, states_before_impact, states_after_impact, impact_type
+        states_prediction, impact_info = free_falling.falling(states_last_step, dt)
+        states_kf = self.kalman_filter(states_prediction, states_measurement, 
+                                       dt, free_falling.kd, free_falling.km)
+        return states_kf, impact_info
     
         
     

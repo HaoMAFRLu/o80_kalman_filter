@@ -50,7 +50,7 @@ class Table():
         -------
         Next state
         """
-        states[3:6] = model@states[3:6].reshape(-1, 1)
+        states[3:6] = model@states[3:6]
         return states
         
 
@@ -138,7 +138,7 @@ class Ground():
         -------
         Next state
         """
-        states[3:6] = model@states[3:6].reshape(-1, 1)
+        states[3:6] = model@states[3:6]
         return states
         
 

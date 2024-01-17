@@ -102,12 +102,12 @@ class FreeFalling():
         Next states
         """
         v_norm = np.linalg.norm(states[3:6], ord=2)
-        states_next = np.hstack((states[0] + states[3] * dt, 
-                                 states[1] + states[4] * dt, 
-                                 states[2] + states[5] * dt - 0.5 * self.gravity * dt**2, 
-                                 states[3] + dt * (-self.kd * v_norm * states[3] + self.km * (states[7]*states[5] - states[8]*states[4])) , 
-                                 states[4] + dt * (-self.kd * v_norm * states[4] + self.km * (states[8]*states[3] - states[6]*states[5])) , 
-                                 states[5] + dt * (-self.kd * v_norm * states[5] + self.km * (states[6]*states[4] - states[7]*states[3]) - self.gravity),  
+        states_next = np.hstack((states[0] + states[3]*dt, 
+                                 states[1] + states[4]*dt, 
+                                 states[2] + states[5]*dt - 0.5*self.gravity*dt**2, 
+                                 states[3] + dt*(-self.kd*v_norm*states[3] + self.km*(states[7]*states[5] - states[8]*states[4])) , 
+                                 states[4] + dt*(-self.kd*v_norm*states[4] + self.km*(states[8]*states[3] - states[6]*states[5])) , 
+                                 states[5] + dt*(-self.kd*v_norm*states[5] + self.km*(states[6]*states[4] - states[7]*states[3]) - self.gravity),  
                                  states[6],
                                  states[7],
                                  states[8],))
@@ -136,7 +136,7 @@ class FreeFalling():
             states_next = self.ground.impact(states)
         return states_next
 
-    def falling(self, states: State9d, dt: float) -> (State9d, State9d, State9d, str):
+    def falling(self, states: State9d, dt: float) -> (State9d, tuple):
         """This function is used to apply the free 
         fall motion for one single time step dt and 
         detect the impact with the environment. 
@@ -147,7 +147,7 @@ class FreeFalling():
         Parameters
         ----------
         states:
-          the current states of the object
+          states of the object from last time step
         dt:
           one single time step
 
@@ -176,4 +176,5 @@ class FreeFalling():
             states_after_impact = self.cal_impact(states_before_impact, impact_type)
             states_falling = self.free_falling(states_after_impact, dt-t_until_impact)
         
-        return states_falling, states_before_impact, states_after_impact, impact_type
+        impact_info = (states_before_impact, states_after_impact, impact_type)
+        return states_falling, impact_info

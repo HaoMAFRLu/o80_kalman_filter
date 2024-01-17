@@ -71,7 +71,7 @@ class KalmanFilter:
         self.x_pred = None
 
         self.Q = get_diag_matrix(self, (self.sigma_r, self.sigma_v, self.sigma_omega))
-        self.R = get_diag_matrix(self, (self.sigma_y, ))
+        self.R = get_diag_matrix(self, (c))
         self.P_m = get_diag_matrix(self, (self.ini_sigma_r, self.ini_sigma_v, self.ini_sigma_omega))
         
         self.H = np.hstack((np.identity(3), np.zeros((3, 6))))
